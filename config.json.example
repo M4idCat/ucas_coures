@@ -1,7 +1,7 @@
 {
   "user": "your_username",
   "password": "your_password",
-  "course_file": "absolute path for courses.txt",
+  "course_file": "absolute path for class.txt",
   "headless": false,
   "retry_per_course": 2,
   "always_continue": false,

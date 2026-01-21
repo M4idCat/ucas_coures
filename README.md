@@ -25,6 +25,7 @@
    pip install selenium webdriver-manager ddddocr
 
 3. Chrome 浏览器（建议使用最新版本）
+
 4. ChromeDriver(可选，速度更快)
    去[ChromeDriver 下载页面](https://googlechromelabs.github.io/chrome-for-testing/#stable)下载与 Chrome 版本匹配的 ChromeDriver，并将其放置在项目根目录下
    将代码中的第25行的`USE_LOCAL_DRIVER`设置为True
