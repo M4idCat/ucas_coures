@@ -22,7 +22,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 # -------------------- 站点配置 --------------------
 SEP_HOME   = "https://sep.ucas.ac.cn/"
 COURSE_URL = "https://sep.ucas.ac.cn/portal/site/524/2412"
-
+USE_LOCAL_DRIVER = True  # 若为 False 则使用 webdriver_manager 自动下载
 # 登录页元素
 XPATH_USERNAME = '//*[@id="userName1"]'
 XPATH_PASSWORD = '//*[@id="pwd1"]'
@@ -96,9 +96,11 @@ def start_driver():
     if HEADLESS:
         opts.add_argument("--headless=new")
         opts.add_argument("--window-size=1920,1080")
-    #service = Service(ChromeDriverManager().install())
-    driver_path = "/path/to/your/project/chromedriver-linux64/chromedriver"
-    service = Service(driver_path)
+    if USE_LOCAL_DRIVER:
+        driver_path = "./chromedriver-linux64/chromedriver"
+        service = Service(driver_path)
+    else:
+        service = Service(ChromeDriverManager().install())
     return webdriver.Chrome(service=service, options=opts)
 
 def wait_click(driver, locator, timeout=15):
