@@ -56,6 +56,7 @@ RETRY_PER_COURSE     = 2
 ALWAYS_CONTINUE      = False
 OCR_MAX_ATTEMPTS     = 6
 MANUAL_MAX_ATTEMPTS  = 3
+DRIVER_PATH          = ""
 
 # -------------------- 文本模式 --------------------
 SUCCESS_PATTERNS     = re.compile(r"(提交成功|选课成功|添加成功|保存成功|success|已加入|已提交)", re.I)
@@ -82,12 +83,14 @@ def load_config() -> dict:
 
 def apply_config(cfg: dict):
     global HEADLESS, RETRY_PER_COURSE, ALWAYS_CONTINUE
-    global OCR_MAX_ATTEMPTS, MANUAL_MAX_ATTEMPTS
+    global OCR_MAX_ATTEMPTS, MANUAL_MAX_ATTEMPTS, DRIVER_PATH
     HEADLESS             = bool(cfg.get("headless", HEADLESS))
     RETRY_PER_COURSE     = int(cfg.get("retry_per_course", RETRY_PER_COURSE))
     ALWAYS_CONTINUE      = bool(cfg.get("always_continue", ALWAYS_CONTINUE))
     OCR_MAX_ATTEMPTS     = int(cfg.get("ocr_max_attempts", OCR_MAX_ATTEMPTS))
     MANUAL_MAX_ATTEMPTS  = int(cfg.get("manual_max_attempts", MANUAL_MAX_ATTEMPTS))
+    DRIVER_PATH          = str(cfg.get("chromedriver_path",  DRIVER_PATH))
+
 
 # -------------------- 工具函数 --------------------
 def start_driver():
@@ -97,7 +100,7 @@ def start_driver():
         opts.add_argument("--headless=new")
         opts.add_argument("--window-size=1920,1080")
     if USE_LOCAL_DRIVER:
-        driver_path = "./chromedriver-linux64/chromedriver"
+        driver_path = DRIVER_PATH if 'DRIVER_PATH' in globals() else None
         service = Service(driver_path)
     else:
         service = Service(ChromeDriverManager().install())
