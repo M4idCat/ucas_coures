@@ -1,0 +1,5 @@
+chromedriver-linux64/
+.vscode/
+config.json
+__pycache__/
+*.pyc

@@ -1,0 +1,10 @@
+{
+  "user": "your_username",
+  "password": "your_password",
+  "course_file": "absolute path for courses.txt",
+  "headless": false,
+  "retry_per_course": 2,
+  "always_continue": false,
+  "ocr_max_attempts": 6,
+  "manual_max_attempts": 3
+}
