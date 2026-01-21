@@ -29,3 +29,8 @@
 4. ChromeDriver(可选，速度更快)
    去[ChromeDriver 下载页面](https://googlechromelabs.github.io/chrome-for-testing/#stable)下载与 Chrome 版本匹配的 ChromeDriver，并将其放置在项目根目录下
    将代码中的第25行的`USE_LOCAL_DRIVER`设置为True
+
+5. json 配置文件
+   - 将 `config.json.example` 复制一份为 `config.json`
+   - 修改其中的用户名、密码、课程文件路径等配置项
+   - 如使用本地 ChromeDriver，需在配置文件中设置 `chromedriver_path`

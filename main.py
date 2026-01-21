@@ -22,7 +22,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 # -------------------- 站点配置 --------------------
 SEP_HOME   = "https://sep.ucas.ac.cn/"
 COURSE_URL = "https://sep.ucas.ac.cn/portal/site/524/2412"
-USE_LOCAL_DRIVER = True  # 若为 False 则使用 webdriver_manager 自动下载
+USE_LOCAL_DRIVER = False # 若为 False 则使用 webdriver_manager 自动下载
 # 登录页元素
 XPATH_USERNAME = '//*[@id="userName1"]'
 XPATH_PASSWORD = '//*[@id="pwd1"]'
