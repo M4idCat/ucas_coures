@@ -1,7 +1,12 @@
 # UCAS 抢课脚本
 
 本项目是一个使用 **Python + Selenium** 编写的自动化脚本，用于在 **中国科学院大学 (UCAS)** 教务系统进行抢课操作。  
+
 支持自动登录、课程查询、自动勾选、验证码 OCR 识别（支持人工兜底输入），并处理课程已满/时间冲突/提交过于频繁等情况。
+
+由于本人第一天抢课痛失滑雪课，随编写该脚本，辅助我**自己**进行课程**选取**
+
+![alt text](image.png)
 
 ---
 
@@ -23,6 +28,7 @@
 - Python 3.8+
 - Chrome 浏览器（建议使用最新版本）
 - ChromeDriver（可选，速度更快，见下节）
+- Support Linux and MacOS, windows not test, pls ref to AI
 
 ---
 
@@ -109,3 +115,11 @@ pip install selenium webdriver-manager ddddocr
 | `always_continue` | 是否总是判定为成功继续 |
 | `ocr_max_attempts` | 验证码 OCR 自动识别最大次数 |
 | `manual_max_attempts` | 验证码人工输入最大次数 |
+
+---
+
+## 开源许可 (License)
+
+本项目采用 [MIT License](https://opensource.org/licenses/MIT)。
+
+Copyright (c) 2026 M4idCat
