@@ -28,7 +28,7 @@
 - Python 3.8+
 - Chrome 浏览器（建议使用最新版本）
 - ChromeDriver（可选，速度更快，见下节）
-- Support Linux and MacOS, windows not test, pls ref to AI
+- Support Linux and MacOS, not test on windows so far, pls ref to AI
 
 ---
 
