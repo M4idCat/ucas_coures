@@ -19,18 +19,73 @@
 ---
 
 ## 环境依赖
-1. Python 3.8+
-2. 安装依赖：
+
+- Python 3.8+
+- Chrome 浏览器（建议使用最新版本）
+- ChromeDriver（可选，速度更快）
+  - 前往 [ChromeDriver 下载页面](https://googlechromelabs.github.io/chrome-for-testing/#stable) 下载与 Chrome 版本匹配的 ChromeDriver，并放置在项目根目录下
+  - 将 `main.py` 第 25 行的 `USE_LOCAL_DRIVER` 设置为 `True`
+
+---
+
+## 安装依赖
+
+### 方式一：使用 uv（推荐）
+
+本项目使用 [uv](https://docs.astral.sh/uv/) 管理虚拟环境与依赖，配置位于 `pyproject.toml`。
+
+1. 安装 uv（如未安装）：
    ```bash
-   pip install selenium webdriver-manager ddddocr
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   ```
 
-3. Chrome 浏览器（建议使用最新版本）
+2. 创建虚拟环境并安装依赖（`uv` 会读取 `pyproject.toml` 并自动生成/更新 `uv.lock`）：
+   ```bash
+   uv sync
+   ```
 
-4. ChromeDriver(可选，速度更快)
-   去[ChromeDriver 下载页面](https://googlechromelabs.github.io/chrome-for-testing/#stable)下载与 Chrome 版本匹配的 ChromeDriver，并将其放置在项目根目录下
-   将代码中的第25行的`USE_LOCAL_DRIVER`设置为True
+3. 运行脚本：
+   ```bash
+   uv run python main.py
+   ```
+   或先激活虚拟环境再运行：
+   ```bash
+   source .venv/bin/activate
+   python main.py
+   ```
 
-5. json 配置文件
-   - 将 `config.json.example` 复制一份为 `config.json`
-   - 修改其中的用户名、密码、课程文件路径等配置项
-   - 如使用本地 ChromeDriver，需在配置文件中设置 `chromedriver_path`
+4. 添加/更新依赖：
+   ```bash
+   uv add selenium webdriver-manager ddddocr
+   ```
+
+### 方式二：使用 pip
+
+```bash
+pip install selenium webdriver-manager ddddocr
+```
+
+---
+
+## 使用说明
+
+1. 准备课程文件：复制 `class.txt.example` 为 `class.txt`，一行一个课程代码
+2. 准备配置文件：复制 `config.json.example` 为 `config.json`，修改用户名、密码、课程文件路径等配置项
+3. 运行脚本：
+   ```bash
+   uv run python main.py
+   ```
+
+### 配置文件说明
+
+| 配置项 | 说明 |
+| --- | --- |
+| `user` | UCAS 登录用户名 |
+| `password` | UCAS 登录密码 |
+| `course_file` | 课程代码文件（`class.txt`）的绝对路径 |
+| `chromedriver_path` | 本地 ChromeDriver 的绝对路径（使用本地驱动时填写） |
+| `headless` | 是否以无头模式运行（`true` / `false`） |
+| `retry_per_course` | 每门课程的重试次数 |
+| `always_continue` | 是否总是判定为成功继续 |
+| `ocr_max_attempts` | 验证码 OCR 自动识别最大次数 |
+| `manual_max_attempts` | 验证码人工输入最大次数 |
