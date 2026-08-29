@@ -22,9 +22,27 @@
 
 - Python 3.8+
 - Chrome 浏览器（建议使用最新版本）
-- ChromeDriver（可选，速度更快）
-  - 前往 [ChromeDriver 下载页面](https://googlechromelabs.github.io/chrome-for-testing/#stable) 下载与 Chrome 版本匹配的 ChromeDriver，并放置在项目根目录下
-  - 将 `main.py` 第 25 行的 `USE_LOCAL_DRIVER` 设置为 `True`
+- ChromeDriver（可选，速度更快，见下节）
+
+---
+
+## 查找 Chrome 版本与匹配的 ChromeDriver
+
+Chrome 115 之后，ChromeDriver 的版本号与 Chrome 主版本号一一对应（例如 Chrome 131 ↔ ChromeDriver 131）。手动配置步骤如下：
+
+1. **查看 Chrome 版本**（任选其一）：
+   - 浏览器地址栏输入 `chrome://version/`，第一行「Google Chrome」即版本号（所有平台通用）
+   - 命令行：
+     - Linux：`google-chrome --version` 或 `chromium --version`
+     - macOS：`"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --version`
+2. **下载匹配的 ChromeDriver**：
+   - 打开 [Chrome for Testing](https://googlechromelabs.github.io/chrome-for-testing/) 页面
+   - 选择 **Stable** 渠道，找到与你的 Chrome **主版本号相同**的条目
+   - 下载对应平台的 `chromedriver`（linux64 / mac-x64 / mac-arm64 / win32 / win64）
+   - 解压后将 `chromedriver` 放到项目根目录（如 `chromedriver-linux64/chromedriver`）
+3. 在 `config.json` 中设置 `chromedriver_path` 为驱动完整路径，脚本即使用本地驱动
+
+> 提示：`chromedriver_path` 留空时，脚本会使用 `webdriver_manager` 自动下载与当前 Chrome 匹配的 ChromeDriver。手动配置只是为了让启动更快、避免每次联网下载。
 
 ---
 
@@ -76,14 +94,16 @@ pip install selenium webdriver-manager ddddocr
    uv run python main.py
    ```
 
-### 配置文件说明
+---
+
+## 配置文件说明
 
 | 配置项 | 说明 |
 | --- | --- |
 | `user` | UCAS 登录用户名 |
 | `password` | UCAS 登录密码 |
 | `course_file` | 课程代码文件（`class.txt`）的绝对路径 |
-| `chromedriver_path` | 本地 ChromeDriver 的绝对路径（使用本地驱动时填写） |
+| `chromedriver_path` | 本地 ChromeDriver 的绝对路径（留空则自动下载） |
 | `headless` | 是否以无头模式运行（`true` / `false`） |
 | `retry_per_course` | 每门课程的重试次数 |
 | `always_continue` | 是否总是判定为成功继续 |

@@ -22,7 +22,6 @@ from webdriver_manager.chrome import ChromeDriverManager
 # -------------------- 站点配置 --------------------
 SEP_HOME   = "https://sep.ucas.ac.cn/"
 COURSE_URL = "https://sep.ucas.ac.cn/portal/site/524/2412"
-USE_LOCAL_DRIVER = False # 若为 False 则使用 webdriver_manager 自动下载
 # 登录页元素
 XPATH_USERNAME = '//*[@id="userName1"]'
 XPATH_PASSWORD = '//*[@id="pwd1"]'
@@ -32,6 +31,7 @@ VERIFY_XPATHS = [
     "//input[contains(@placeholder,'验证码')]",
     "//input[contains(@id,'cert') or contains(@name,'cert')]",
 ]
+LOGIN_CAPTCHA_IMG_XPATH = '/html/body/div/div/section/div[2]/div/div[1]/div/div[1]/div/form[2]/div[1]/div/div[2]/div[3]/img'
 
 # 抢课页元素
 XPATH_ADD_COURSE_BTN   = '//*[@id="regfrm2"]/div/button'
@@ -99,21 +99,29 @@ def start_driver():
     if HEADLESS:
         opts.add_argument("--headless=new")
         opts.add_argument("--window-size=1920,1080")
-    if USE_LOCAL_DRIVER:
-        driver_path = DRIVER_PATH if 'DRIVER_PATH' in globals() else None
-        service = Service(driver_path)
+    if DRIVER_PATH:
+        service = Service(DRIVER_PATH)
     else:
         service = Service(ChromeDriverManager().install())
     return webdriver.Chrome(service=service, options=opts)
 
 def wait_click(driver, locator, timeout=15):
     wait = WebDriverWait(driver, timeout)
-    el = wait.until(EC.element_to_be_clickable((By.XPATH, locator)))
-    try:
-        el.click()
-    except Exception:
-        driver.execute_script("arguments[0].click();", el)
-    return el
+    end = time.time() + timeout
+    while time.time() < end:
+        el = wait.until(EC.element_to_be_clickable((By.XPATH, locator)))
+        try:
+            el.click()
+            return el
+        except StaleElementReferenceException:
+            continue
+        except Exception:
+            try:
+                driver.execute_script("arguments[0].click();", el)
+                return el
+            except StaleElementReferenceException:
+                continue
+    raise TimeoutException(f"点击元素超时: {locator}")
 
 def switch_into_frame_holding(driver, xpath, timeout=10):
     end = time.time() + timeout
@@ -411,27 +419,83 @@ def read_course_codes(path: str) -> List[str]:
         raise RuntimeError("课程文件为空或仅包含空行/注释。")
     return codes
 
-def login(driver, user: str, pwd: str):
-    driver.get(SEP_HOME)
+def _fill_credentials(driver, user: str, pwd: str):
+    """重新定位并填写账号密码（登录失败刷新后旧引用会失效）。"""
     wait = WebDriverWait(driver, 15)
     user_el = wait.until(EC.presence_of_element_located((By.XPATH, XPATH_USERNAME)))
     pwd_el  = wait.until(EC.presence_of_element_located((By.XPATH, XPATH_PASSWORD)))
-    login_btn = wait.until(EC.presence_of_element_located((By.XPATH, XPATH_LOGINBTN)))
-
     user_el.clear(); user_el.send_keys(user)
     pwd_el.clear();  pwd_el.send_keys(pwd)
-    print("[info] 已填写用户名与密码，若有验证码请手动输入。")
 
-    verify_el = find_verify_input(driver)
-    if verify_el:
-        input("请输入登录页验证码后按回车继续...")
-    login_btn.click()
-
+def _wait_logged_in(driver, timeout: int = 10) -> bool:
+    """登录成功会跳转到工作台（URL 含 sepCard），据此检测登录成功。"""
     try:
-        WebDriverWait(driver, 30).until(lambda d: "登录" not in d.title)
-        print("[ok] 登录成功（标题变化）")
+        WebDriverWait(driver, timeout).until(lambda d: "sepCard" in d.current_url)
+        return True
     except TimeoutException:
-        print("[warn] 30s 内标题未变化，继续尝试后续步骤。")
+        return False
+
+def login(driver, user: str, pwd: str):
+    driver.get(SEP_HOME)
+    _fill_credentials(driver, user, pwd)
+
+    for attempt in range(1, OCR_MAX_ATTEMPTS + 1):
+        # 登录页验证码：ddddocr 自动识别，识别失败则人工兜底
+        if find_verify_input(driver):
+            if not solve_login_captcha(driver):
+                input("[手动] 请在浏览器中输入验证码（不要点登录按钮），输完后回到终端按回车，脚本会自动点击登录...")
+
+        # 重新定位并点击登录按钮（等待验证码期间页面可能已刷新，旧引用会失效）
+        wait_click(driver, XPATH_LOGINBTN, timeout=15)
+
+        # 登录成功会立即跳转到工作台（sepCard），检测到即返回
+        if _wait_logged_in(driver, timeout=10):
+            print("[ok] 登录成功，已跳转到工作台。")
+            return
+
+        # 仍在登录页 → 验证码可能错误，重新填账号密码后重试
+        if attempt >= OCR_MAX_ATTEMPTS:
+            break
+        print(f"[warn] 第 {attempt} 次登录未成功，重新填写账号密码后重试...")
+        try:
+            _fill_credentials(driver, user, pwd)
+        except TimeoutException:
+            print("[ok] 登录成功")
+            return
+
+    print("[warn] 登录多次尝试仍未成功。")
+
+def solve_login_captcha(driver, max_attempts=6) -> bool:
+    """登录页验证码：用 ddddocr 自动识别并填入输入框。"""
+    try:
+        import ddddocr
+    except ImportError as e:
+        raise ImportError("请先安装 ddddocr: pip install ddddocr") from e
+    ocr = ddddocr.DdddOcr(show_ad=False)
+
+    for _ in range(max_attempts):
+        img_el = None
+        try:
+            img_el = WebDriverWait(driver, 8).until(
+                EC.presence_of_element_located((By.XPATH, LOGIN_CAPTCHA_IMG_XPATH))
+            )
+            code = "".join(ch for ch in ocr.classification(img_el.screenshot_as_png) if ch.isalnum())
+        except Exception:
+            continue
+
+        input_el = find_verify_input(driver)
+        if not input_el or not code:
+            if img_el is not None:
+                refresh_captcha(driver, img_el)
+            continue
+
+        input_el.clear()
+        input_el.send_keys(code)
+        print(f"[info] 登录页验证码识别为：{code}")
+        return True
+
+    print("[warn] 登录页验证码自动识别失败。")
+    return False
 
 def main():
     cfg = load_config()

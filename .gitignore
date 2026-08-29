@@ -1,5 +1,7 @@
 chromedriver-linux64/
+chromedriver-linux64.zip
 .vscode/
+.venv/
 config.json
 class.txt
 __pycache__/
